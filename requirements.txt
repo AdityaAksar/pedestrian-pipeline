@@ -1,0 +1,8 @@
+google-cloud-bigquery
+google-auth
+pandas
+pandas-gbq
+pyarrow
+requests
+db-dtypes
+meteostat
