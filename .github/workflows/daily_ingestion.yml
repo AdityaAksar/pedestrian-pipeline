@@ -2,11 +2,11 @@ name: Daily Ingestion Pipeline
 
 on:
   schedule:
-    # Jam 01:00 UTC = 11:00 AEST (Melbourne time)
     - cron: "0 1 * * *"
-
-  # Running manual dari GitHub Actions tab
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   ingest:
