@@ -144,7 +144,8 @@ def generate_future_features(df_hist: pd.DataFrame, hours: int = 168) -> pd.Data
 
 # ── Build future feature rows ──────────────────────────────────────────────────
 def build_future_rows(df_hist: pd.DataFrame, df_weather: pd.DataFrame) -> pd.DataFrame:
-    last_dt = df_hist['sensing_datetime'].max()
+    now = datetime.now().replace(minute=0, second=0, microsecond=0)
+    last_dt = max(df_hist['sensing_datetime'].max(), now)
     future_dts = [last_dt + timedelta(hours=i+1) for i in range(168)]
  
     df_weather = df_weather.copy()
