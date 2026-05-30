@@ -293,6 +293,8 @@ def main():
     print("=== Melbourne Pedestrian Forecasting Pipeline ===")
     print(f"Run time: {datetime.now().isoformat()}")
 
+    df_weather = fetch_weather_forecast()
+
     client = get_bq_client()
 
     sensors_query = '''
@@ -314,7 +316,7 @@ def main():
     skipped = 0
 
     for _, row in df_sensors.iterrows():
-        result = run_sensor(client, row['sensor_name'], int(row['location_id']))
+        result = run_sensor(client, row['sensor_name'], int(row['location_id']), df_weather)
         if result is not None:
             all_results.append(result)
             success += 1
