@@ -281,19 +281,18 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
     df_future['rmse']            = rmse
     df_future['mape']            = mape
     df_future['predicted_at']    = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    df_future['data_type']       = 'forecast'
  
     return df_future[[
         'sensor_name', 'location_id', 'sensing_datetime',
         'actual_count', 'predicted_count',
-        'model', 'mae', 'rmse', 'mape', 'predicted_at'
+        'model', 'mae', 'rmse', 'mape', 'predicted_at', 'data_type'
     ]]
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=== Melbourne Pedestrian Forecasting Pipeline ===")
     print(f"Run time: {datetime.now().isoformat()}")
-
-    df_weather = fetch_weather_forecast()
 
     client = get_bq_client()
 
@@ -316,7 +315,7 @@ def main():
     skipped = 0
 
     for _, row in df_sensors.iterrows():
-        result = run_sensor(client, row['sensor_name'], int(row['location_id']), df_weather)
+        result = run_sensor(client, row['sensor_name'], int(row['location_id']))
         if result is not None:
             all_results.append(result)
             success += 1
