@@ -223,6 +223,11 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
         return None
     df['sensing_datetime'] = pd.to_datetime(df['sensing_datetime']).dt.tz_localize(None)
 
+    last_dt = df['sensing_datetime'].max()
+    if (datetime.now() - last_dt).days > 30:
+        print(f"    [SKIP] Data too old: last={last_dt.date()}")
+        return None
+
     # Feature engineering
     df_feat = create_features(df)
     df_feat = df_feat.dropna(subset=FEATURES + ['pedestrian_count']).reset_index(drop=True)
