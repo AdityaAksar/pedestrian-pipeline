@@ -63,7 +63,7 @@ def fetch_weather_forecast() -> pd.DataFrame:
         'windspeed_ms':     data['hourly']['windspeed_10m'],
         'humidity_pct':     data['hourly']['relativehumidity_2m'],
     })
-    print(f'  Weather forecast: {len(df_weather)} jam ({df_weather['sensing_datetime'].min().date()} s/d {df_weather['sensing_datetime'].max().date()})')
+    print(f"Weather forecast: {len(df_weather)} jam ({df_weather['sensing_datetime'].min().date()} s/d {df_weather['sensing_datetime'].max().date()})")
     return df_weather
 
 # ── Features ──────────────────────────────────────────────────────────────────
@@ -199,10 +199,10 @@ def build_future_rows(df_hist: pd.DataFrame, df_weather: pd.DataFrame) -> pd.Dat
 
 # ── Per-sensor pipeline ───────────────────────────────────────────────────────
 def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_weather: pd.DataFrame) -> pd.DataFrame | None:
-    print(f'  → {sensor_name} (location_id={location_id})')
+    print(f"  → {sensor_name} (location_id={location_id})")
 
     # Fetch Data
-    query = f'''
+    query = f"""
         SELECT
             sensing_datetime, pedestrian_count,
             is_public_holiday,
@@ -211,15 +211,15 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
         WHERE sensor_name = '{sensor_name}'
           AND location_id = {location_id}
         ORDER BY sensing_datetime
-    '''
+    """
     try:
         df = client.query(query).to_dataframe()
     except Exception as e:
-        print(f'[SKIP] Query Failed: {e}')
+        print(f"[SKIP] Query Failed: {e}")
         return None
 
     if len(df) < 300:
-        print(f'[SKIP] Insufficient Data: {len(df)} rows')
+        print(f"[SKIP] Insufficient Data: {len(df)} rows")
         return None
     df['sensing_datetime'] = pd.to_datetime(df['sensing_datetime']).dt.tz_localize(None)
 
@@ -228,7 +228,7 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
     df_feat = df_feat.dropna(subset=FEATURES + ['pedestrian_count']).reset_index(drop=True)
 
     if len(df_feat) < 200:
-        print(f'[SKIP] Insufficient data after dropna: {len(df_feat)} rows')
+        print(f"[SKIP] Insufficient data after dropna: {len(df_feat)} rows")
         return None
 
     # Train/test split
@@ -251,7 +251,7 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
     mae  = mean_absolute_error(y_test, y_pred_test)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
     mape = np.mean(np.abs((y_test.values - y_pred_test) / (y_test.values + 1))) * 100
-    print(f'    MAE={mae:.1f}  RMSE={rmse:.1f}  MAPE={mape:.1f}%')
+    print(f"    MAE={mae:.1f}  RMSE={rmse:.1f}  MAPE={mape:.1f}%")
 
     # Build future rows with Open-Meteo weather
     df_future = build_future_rows(df, df_weather)
@@ -290,8 +290,8 @@ def run_sensor(client: bigquery.Client, sensor_name: str, location_id: int, df_w
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    print('=== Melbourne Pedestrian Forecasting Pipeline ===')
-    print(f'Run time: {datetime.now().isoformat()}')
+    print("=== Melbourne Pedestrian Forecasting Pipeline ===")
+    print(f"Run time: {datetime.now().isoformat()}")
 
     client = get_bq_client()
 
@@ -301,13 +301,13 @@ def main():
         ORDER BY sensor_name
     '''
     df_sensors = client.query(sensors_query).to_dataframe()
-    print(f'\nTotal sensor: {len(df_sensors)}')
+    print(f"\nTotal sensor: {len(df_sensors)}")
 
     client.query('''
         DELETE FROM `melbourne-pedestrian-pipeline.mart.predictions`
         WHERE predicted_at IS NOT NULL
     ''').result()
-    print('Prediction table deleted.\n')
+    print("Prediction table deleted.\n")
 
     all_results = []
     success = 0
@@ -339,10 +339,10 @@ def main():
     )
     job.result()
 
-    print(f'\n{'='*50}')
-    print(f'Done! {success} sensor successfully processed, {skipped} skipped.')
-    print(f'Total rows saved: {len(df_all):,}')
-    print(f'{'='*50}')
+    print(f"\n{'='*50}")
+    print(f"Done! {success} sensor successfully processed, {skipped} skipped.")
+    print(f"Total rows saved: {len(df_all):,}")
+    print(f"{'='*50}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
